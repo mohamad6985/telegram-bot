@@ -6,7 +6,7 @@ TOKEN = "8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k"
 songs = {
     "mockingbird": "https://t.me/YourChannel/25",
     "lose yourself": "https://t.me/YourChannel/30",
-    "eminem": "https://t.me/YourChannel"
+    "eminem":"https://t.me/music_b_rooz"
 }
 
 async def search_music(update: Update, context: ContextTypes.DEFAULT_TYPE):
