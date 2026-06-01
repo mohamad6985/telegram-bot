@@ -1,55 +1,55 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, MessageHandler, filters, ContextTypes
-import yt_dlp
 import os
+import yt_dlp
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = "8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k"
+TOKEN = os.getenv("8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k")
 
-CHANNEL = "https://t.me/music_b_rooz"
-async def download_music(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.message.text
 
-    await update.message.reply_text("⏳ درحال پیدا کردن آهنگ...")
-
+def download_audio(query):
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': 'music.%(ext)s',
-        'noplaylist': True,
-        'quiet': True
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        "quiet": True,
+        "default_search": "ytsearch1",
+        "outtmpl": "song.%(ext)s",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }],
     }
 
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([query])
+
+    return "song.mp3"
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🎧 اسم آهنگ رو بفرست")
+
+
+async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.message.text
+
+    await update.message.reply_text("⏳ در حال دانلود...")
+
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch1:{query}", download=True)
+        file_path = download_audio(query)
 
-            video = info['entries'][0]
+        with open(file_path, "rb") as audio:
+            await update.message.reply_audio(audio=audio)
 
-            title = video['title']
-            duration = video['duration']
+        os.remove(file_path)
 
-            file_name = "music.webm"
+    except:
+        await update.message.reply_text("❌ خطا دوباره تلاش کن")
 
-            keyboard = [
-                [InlineKeyboardButton("📢 کانال موزیک", url=CHANNEL)]
-            ]
 
-            reply_markup = InlineKeyboardMarkup(keyboard)
+app = Application.builder().token(TOKEN).build()
 
-            await update.message.reply_audio(
-                audio=open(file_name, 'rb'),
-                title=title,
-                performer="Music Bot",
-                caption=f"🎵 {title}\n⏱ {duration} ثانیه",
-                reply_markup=reply_markup
-            )
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-            os.remove(file_name)
-
-    except Exception as e:
-        await update.message.reply_text(f"❌ خطا:\n{e}")
-      app = Application.builder().token(TOKEN).build()
-
-app.add_handler(MessageHandler(filters.TEXT, download_music))
-
-print("Bot Started...")
-app.run_polling(drop_pending_updates=True)
+app.run_polling()
