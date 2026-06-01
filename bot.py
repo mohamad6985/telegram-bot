@@ -5,4 +5,4 @@ import os
 
 TOKEN = "8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k"
 
-CHANNEL = "https://t.me/YourChannel"
+CHANNEL = "https://t.me/music_b_rooz"
