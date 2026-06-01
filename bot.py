@@ -1,51 +1,29 @@
-import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-import yt_dlp
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
-TOKEN = os.getenv("8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k")
+TOKEN = "8863865830:AAGHRVy-MgesNn-thoEx4_3XicqBBI6Vh6k"
 
+songs = {
+    "mockingbird": "https://t.me/YourChannel/25",
+    "lose yourself": "https://t.me/YourChannel/30",
+    "eminem": "https://t.me/YourChannel"
+}
 
-def get_audio_url(query):
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "noplaylist": True,
-        "quiet": True,
-        "default_search": "ytsearch1",
-    }
+async def search_music(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(query, download=False)
-        if "entries" in info:
-            info = info["entries"][0]
-
-        return info["url"], info.get("title", "audio")
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🎧 اسم آهنگ رو بفرست")
-
-
-async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.message.text
-
-    await update.message.reply_text("⏳ در حال پیدا کردن...")
-
-    try:
-        url, title = get_audio_url(query)
-
-        await update.message.reply_audio(
-            audio=url,
-            title=title
+    if text in songs:
+        await update.message.reply_text(
+            f"🎵 لینک آهنگ:\n{songs[text]}"
         )
-
-    except:
-        await update.message.reply_text("❌ خطا دوباره تلاش کن")
-
+    else:
+        await update.message.reply_text(
+            "❌ آهنگ پیدا نشد"
+        )
 
 app = Application.builder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
+app.add_handler(MessageHandler(filters.TEXT, search_music))
 
+print("Bot Started...")
 app.run_polling()
